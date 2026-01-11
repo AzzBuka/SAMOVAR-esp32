@@ -3,7 +3,7 @@
 #include "telegram_bot.h"
 
 extern GyverDS18Single ds;
-extern GyverDS18Single dsBowl;                         // ДОБАВЛЕНО
+extern GyverDS18Single dsBowl;
 extern bool alertSent;
 
 // =====================================================
@@ -16,12 +16,12 @@ void initTemperatureSensor() {
 }
 
 // =====================================================
-// ИНИЦИАЛИЗАЦИЯ ДАТЧИКА BOWL                          // ДОБАВЛЕНО
+// ИНИЦИАЛИЗАЦИЯ ДАТЧИКА BOWL 
 // =====================================================
-void initBowlSensor() {                                 // ДОБАВЛЕНО
-  dsBowl.requestTemp();                                 // ДОБАВЛЕНО
-  Serial.println("BOWL sensor initialized");            // ДОБАВЛЕНО
-}                                                        // ДОБАВЛЕНО
+void initBowlSensor() {
+  dsBowl.requestTemp();
+  Serial.println("BOWL sensor initialized");
+}
 
 // =====================================================
 // ОБРАБОТКА ОШИБКИ ДАТЧИКА
@@ -90,21 +90,21 @@ void updateTemperature() {
 }
 
 // =====================================================
-// ОБНОВЛЕНИЕ ТЕМПЕРАТУРЫ BOWL                         // ДОБАВЛЕНО
+// ОБНОВЛЕНИЕ ТЕМПЕРАТУРЫ BOWL
 // =====================================================
-void updateBowlTemperature() {                          // ДОБАВЛЕНО
-  if (dsBowl.tick()) {                                  // ДОБАВЛЕНО
-    if (dsBowl.readTemp()) {                            // ДОБАВЛЕНО
-      float temp = dsBowl.getTemp();                    // ДОБАВЛЕНО
+void updateBowlTemperature() {
+  if (dsBowl.tick()) {
+    if (dsBowl.readTemp()) {
+      float temp = dsBowl.getTemp();
       
-      // Проверка валидности температуры (0-100°C)    // ДОБАВЛЕНО
-      if (temp >= TEMP_MIN_VALID && temp <= TEMP_MAX_VALID) {  // ДОБАВЛЕНО
-        bowlTmpCur = temp;                              // ДОБАВЛЕНО
-        dsBowl.requestTemp();                           // ДОБАВЛЕНО
-        Serial.println("BOWL Temp: " + String(bowlTmpCur, 1) + "°C");  // ДОБАВЛЕНО
-      } else {                                          // ДОБАВЛЕНО
-        Serial.println("Invalid BOWL temperature: " + String(temp) + "°C");  // ДОБАВЛЕНО
-      }                                                 // ДОБАВЛЕНО
-    }                                                   // ДОБАВЛЕНО
-  }                                                     // ДОБАВЛЕНО
-}                                                       // ДОБАВЛЕНО
+      // Проверка валидности температуры (0-100°C) 
+      if (temp >= TEMP_MIN_VALID && temp <= TEMP_MAX_VALID) { 
+        bowlTmpCur = temp;
+        dsBowl.requestTemp();
+        Serial.println("BOWL Temp: " + String(bowlTmpCur, 1) + "°C");
+      } else {
+        Serial.println("Invalid BOWL temperature: " + String(temp) + "°C");
+      }
+    }
+  }
+}
