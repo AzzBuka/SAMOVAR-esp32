@@ -34,6 +34,9 @@ void sendBotMessage(String text, String chatID) {
 // =====================================================
 // ОТПРАВКА СТАТУСА
 // =====================================================
+// =====================================================
+// ОТПРАВКА СТАТУСА
+// =====================================================
 void sendStatus(String cID) {
   if(bot == nullptr) return;
   
@@ -50,6 +53,7 @@ void sendStatus(String cID) {
              "----------------------------\n"
              "🕐 Time: " + getTimeString() + "\n"
              "🌡️ Temperature: " + String(myTmpCur, 1) + "°C " + sensorStatus + "\n"
+             "🥣 BOWL Temp: " + String(bowlTmpCur, 1) + "°C\n"      // ДОБАВЛЕНО
              "----------------------------\n"
              "📈 MAX Threshold: " + String(myTmpMax, 1) + "°C\n"
              "📉 MIN Threshold: " + String(myTmpMin, 1) + "°C\n"
