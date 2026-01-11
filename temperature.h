@@ -11,8 +11,14 @@
 // Инициализация датчика DS18B20
 void initTemperatureSensor();
 
+// Инициализация датчика BOWL                         // ДОБАВЛЕНО
+void initBowlSensor();                                 // ДОБАВЛЕНО
+
 // Чтение температуры (вызывать в loop)
 void updateTemperature();
+
+// Чтение температуры BOWL (вызывать в loop)          // ДОБАВЛЕНО
+void updateBowlTemperature();                          // ДОБАВЛЕНО
 
 // Проверка таймаута датчика
 void checkSensorTimeout();
