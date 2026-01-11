@@ -3,6 +3,7 @@
 #include "telegram_bot.h"
 
 extern GyverDS18Single ds;
+extern GyverDS18Single dsBowl;                         // ДОБАВЛЕНО
 extern bool alertSent;
 
 // =====================================================
@@ -13,6 +14,14 @@ void initTemperatureSensor() {
   lastSuccessRead = millis();
   Serial.println("Temperature sensor initialized");
 }
+
+// =====================================================
+// ИНИЦИАЛИЗАЦИЯ ДАТЧИКА BOWL                          // ДОБАВЛЕНО
+// =====================================================
+void initBowlSensor() {                                 // ДОБАВЛЕНО
+  dsBowl.requestTemp();                                 // ДОБАВЛЕНО
+  Serial.println("BOWL sensor initialized");            // ДОБАВЛЕНО
+}                                                        // ДОБАВЛЕНО
 
 // =====================================================
 // ОБРАБОТКА ОШИБКИ ДАТЧИКА
@@ -79,3 +88,23 @@ void updateTemperature() {
     }
   }
 }
+
+// =====================================================
+// ОБНОВЛЕНИЕ ТЕМПЕРАТУРЫ BOWL                         // ДОБАВЛЕНО
+// =====================================================
+void updateBowlTemperature() {                          // ДОБАВЛЕНО
+  if (dsBowl.tick()) {                                  // ДОБАВЛЕНО
+    if (dsBowl.readTemp()) {                            // ДОБАВЛЕНО
+      float temp = dsBowl.getTemp();                    // ДОБАВЛЕНО
+      
+      // Проверка валидности температуры (0-100°C)    // ДОБАВЛЕНО
+      if (temp >= TEMP_MIN_VALID && temp <= TEMP_MAX_VALID) {  // ДОБАВЛЕНО
+        bowlTmpCur = temp;                              // ДОБАВЛЕНО
+        dsBowl.requestTemp();                           // ДОБАВЛЕНО
+        Serial.println("BOWL Temp: " + String(bowlTmpCur, 1) + "°C");  // ДОБАВЛЕНО
+      } else {                                          // ДОБАВЛЕНО
+        Serial.println("Invalid BOWL temperature: " + String(temp) + "°C");  // ДОБАВЛЕНО
+      }                                                 // ДОБАВЛЕНО
+    }                                                   // ДОБАВЛЕНО
+  }                                                     // ДОБАВЛЕНО
+}                                                       // ДОБАВЛЕНО
