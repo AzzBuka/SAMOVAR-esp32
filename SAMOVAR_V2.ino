@@ -41,6 +41,7 @@
 // ГЛОБАЛЬНЫЕ ОБЪЕКТЫ
 // =====================================================
 GyverDS18Single ds(SENSOR_PIN);
+GyverDS18Single dsBowl(SENSOR_BOWL_PIN);
 FastBot* bot = nullptr;
 Disp7219<1> disp(DISP_DIN, DISP_CLK, DISP_CS); 
 Preferences prefs;
@@ -71,7 +72,8 @@ uint32_t timerZeroShowTime = 0;
 // =====================================================
 float myTmpMax = 50.0;     
 float myTmpMin = 10.0;     
-float myTmpCur = 0.0;      
+float myTmpCur = 0.0;
+float bowlTmpCur = 0.0;
 float tempDev = 0.0;       
 int waitMode = 0;          
 bool alertSent = false;    
@@ -138,6 +140,7 @@ void setup() {
   
   // --- ИНИЦИАЛИЗАЦИЯ ДАТЧИКА ТЕМПЕРАТУРЫ ---
   initTemperatureSensor();
+  initBowlSensor();
   
   // --- ИНИЦИАЛИЗАЦИЯ АППАРАТНОГО ТАЙМЕРА ---
   initHardwareTimer();
@@ -187,6 +190,7 @@ void loop() {
   
   // --- ОБНОВЛЕНИЕ ТЕМПЕРАТУРЫ ---
   updateTemperature();
+  updateBowlTemperature();
   
   // --- ПРОВЕРКА ЛИМИТОВ ПРОЦЕССА ---
   checkProcessLimits();
