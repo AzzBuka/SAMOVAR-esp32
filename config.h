@@ -14,6 +14,7 @@
 #define ALARM_PIN_33 33         // Зуммер
 #define VALVE_PIN_26 26         // Клапан
 #define SENSOR_PIN 2            // DS18B20
+#define SENSOR_BOWL_PIN 4       // DS18B20 BOWL (дополнительный датчик)
 #define DISP_CS 5               // MAX7219 Chip Select
 #define DISP_CLK 18             // MAX7219 Clock
 #define DISP_DIN 19             // MAX7219 Data In
@@ -66,6 +67,7 @@ extern float myTmpMax;
 extern float myTmpMin;
 extern float myTmpCur;
 extern float tempDev;
+extern float bowlTmpCur;
 
 extern bool alarmEnabled;
 extern bool valveState;
