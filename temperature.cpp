@@ -16,10 +16,12 @@ void initTemperatureSensor() {
 }
 
 // =====================================================
-// ИНИЦИАЛИЗАЦИЯ ДАТЧИКА BOWL 
+// ИНИЦИАЛИЗАЦИЯ ДАТЧИКА BOWL
 // =====================================================
 void initBowlSensor() {
   dsBowl.requestTemp();
+  lastBowlRead = millis();                              // ДОБАВЛЕНО
+  bowlSensorError = false;                              // ДОБАВЛЕНО
   Serial.println("BOWL sensor initialized");
 }
 
@@ -29,8 +31,8 @@ void initBowlSensor() {
 void handleSensorError() {
   if (!sensorErrorActive) {
     sensorErrorActive = true;
-    digitalWrite(ALARM_PIN_33, HIGH);  // Включить зуммер
-    digitalWrite(VALVE_PIN_26, HIGH);  // Закрыть клапан
+    digitalWrite(ALARM_PIN_33, HIGH);
+    digitalWrite(VALVE_PIN_26, HIGH);
     Serial.println("CRITICAL: Sensor timeout!");
     sendBotMessage("🚨 КРИТИЧЕСКАЯ ОШИБКА: Датчик DS18 не отвечает более 5 минут! СИСТЕМА ОСТАНОВЛЕНА.", chatID);
   }
@@ -64,16 +66,13 @@ void updateTemperature() {
     if (ds.readTemp()) {
       float temp = ds.getTemp();
       
-      // Проверка валидности температуры (0-100°C)
       if (temp >= TEMP_MIN_VALID && temp <= TEMP_MAX_VALID) {
         myTmpCur = temp;
         ds.requestTemp();
         lastSuccessRead = millis();
         
-        // Проверка восстановления после ошибки
         handleSensorRecovery();
         
-        // Проверка низкой температуры (независимо от процесса)
         if (myTmpCur < myTmpMin && !alertSent) {
           sendBotMessage("⚠️ НИЗКАЯ ТЕМПЕРАТУРА: " + String(myTmpCur, 1) + "°C", chatID);
           alertSent = true;
@@ -93,15 +92,30 @@ void updateTemperature() {
 // ОБНОВЛЕНИЕ ТЕМПЕРАТУРЫ BOWL
 // =====================================================
 void updateBowlTemperature() {
+  // Проверка таймаута датчика BOWL (30 секунд)         // ДОБАВЛЕНО
+  if (millis() - lastBowlRead > 30000) {                 // ДОБАВЛЕНО
+    if (!bowlSensorError) {                              // ДОБАВЛЕНО
+      bowlSensorError = true;                            // ДОБАВЛЕНО
+      Serial.println("BOWL sensor timeout - sensor error!");  // ДОБАВЛЕНО
+    }                                                    // ДОБАВЛЕНО
+  }                                                      // ДОБАВЛЕНО
+  
   if (dsBowl.tick()) {
     if (dsBowl.readTemp()) {
       float temp = dsBowl.getTemp();
       
-      // Проверка валидности температуры (0-100°C) 
-      if (temp >= TEMP_MIN_VALID && temp <= TEMP_MAX_VALID) { 
+      if (temp >= TEMP_MIN_VALID && temp <= TEMP_MAX_VALID) {
         bowlTmpCur = temp;
         dsBowl.requestTemp();
-        Serial.println("BOWL Temp: " + String(bowlTmpCur, 1) + "°C");
+        lastBowlRead = millis();                         // ДОБАВЛЕНО
+        
+        // Восстановление после ошибки                   // ДОБАВЛЕНО
+        if (bowlSensorError) {                           // ДОБАВЛЕНО
+          bowlSensorError = false;                       // ДОБАВЛЕНО
+          Serial.println("BOWL sensor restored: " + String(bowlTmpCur, 1) + "°C");  // ДОБАВЛЕНО
+        } else {                                         // ДОБАВЛЕНО
+          Serial.println("BOWL Temp: " + String(bowlTmpCur, 1) + "°C");
+        }                                                // ДОБАВЛЕНО
       } else {
         Serial.println("Invalid BOWL temperature: " + String(temp) + "°C");
       }
