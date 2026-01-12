@@ -34,9 +34,6 @@ void sendBotMessage(String text, String chatID) {
 // =====================================================
 // ОТПРАВКА СТАТУСА
 // =====================================================
-// =====================================================
-// ОТПРАВКА СТАТУСА
-// =====================================================
 void sendStatus(String cID) {
   if(bot == nullptr) return;
   
@@ -47,13 +44,16 @@ void sendStatus(String cID) {
   String sensorStatus = sensorErrorActive ? "❌ ERROR" : "✅ OK";
   String alarmPinStatus = digitalRead(ALARM_PIN_33) ? "HIGH" : "LOW";
   
+  // BOWL температура или ошибка                        // ИЗМЕНЕНО
+  String bowlStatus = bowlSensorError ? "sensor error" : String(bowlTmpCur, 1) + "°C";  // ИЗМЕНЕНО
+  
   String s = "📊 *SYSTEM STATUS*\n"
              "----------------------------\n"
              "🎬 Process: " + processStatus + "\n"
              "----------------------------\n"
              "🕐 Time: " + getTimeString() + "\n"
              "🌡️ Temperature: " + String(myTmpCur, 1) + "°C " + sensorStatus + "\n"
-             "🥣 BOWL Temp: " + String(bowlTmpCur, 1) + "°C\n"      // ДОБАВЛЕНО
+             "🥣 BOWL Temp: " + bowlStatus + "\n"           // ИЗМЕНЕНО
              "----------------------------\n"
              "📈 MAX Threshold: " + String(myTmpMax, 1) + "°C\n"
              "📉 MIN Threshold: " + String(myTmpMin, 1) + "°C\n"
