@@ -98,7 +98,8 @@ void updateDisplay() {
     disp.setCursor(5); disp.print(timeinfo.tm_hour % 10);
     disp.setCursor(6); disp.print(timeinfo.tm_min / 10);
     disp.setCursor(7); disp.print(timeinfo.tm_min % 10);
-    disp.point(5, true); // Точка между часами и минутами
+    disp.point(1, true);  // Точка температуры
+    disp.point(5, true);  // Точка времени
     lastDisplayMinute = currentMinute;
   }
   
