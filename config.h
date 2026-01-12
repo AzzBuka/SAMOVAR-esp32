@@ -68,6 +68,8 @@ extern float myTmpMin;
 extern float myTmpCur;
 extern float tempDev;
 extern float bowlTmpCur;
+extern bool bowlSensorError;
+extern uint32_t lastBowlRead;
 
 extern bool alarmEnabled;
 extern bool valveState;
