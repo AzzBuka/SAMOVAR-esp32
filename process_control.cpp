@@ -1,12 +1,16 @@
+const uint32_t BUZZER_ON_TIME = 2000;
+const uint32_t BUZZER_OFF_TIME = 1000;
+
 #include "process_control.h"
 #include "config.h"
 #include "telegram_bot.h"
 
 extern hw_timer_t * timer;
 
-// =====================================================
-// ПРЕРЫВАНИЕ ТАЙМЕРА (каждую секунду)
-// =====================================================
+bool buzzerCycleActive = false;
+bool buzzerCurrentState = false;
+uint32_t buzzerLastChange = 0;
+
 void IRAM_ATTR onTimer() {
   if (timerActive && timerSeconds > 0) {
     timerSeconds--;
@@ -48,10 +52,67 @@ void handleTimerFinished() {
 }
 
 // =====================================================
-// ЛОГИКА КОНТРОЛЯ ТЕМПЕРАТУРЫ (процесс /start)
+// ЗАПУСК ЦИКЛИЧЕСКОГО ЗУММЕРА
+// =====================================================
+void startBuzzerCycle() {
+  if (!buzzerCycleActive && alarmEnabled) {
+    buzzerCycleActive = true;
+    buzzerCurrentState = false;
+    buzzerLastChange = millis();
+    Serial.println("Buzzer cycle STARTED");
+  }
+}
+
+// =====================================================
+// ОСТАНОВКА ЦИКЛИЧЕСКОГО ЗУММЕРА
+// =====================================================
+void stopBuzzerCycle() {
+  if (buzzerCycleActive) {
+    buzzerCycleActive = false;
+    digitalWrite(ALARM_PIN_33, LOW);
+    buzzerCurrentState = false;
+    Serial.println("Buzzer cycle STOPPED");
+  }
+}
+
+// =====================================================
+// ОБНОВЛЕНИЕ ЦИКЛИЧЕСКОГО ЗУММЕРА (вызывать в loop)
+// =====================================================
+void updateBuzzerCycle() {
+  if (!buzzerCycleActive) return;
+  
+  uint32_t currentTime = millis();
+  
+  // Зуммер сейчас включен
+  if (buzzerCurrentState) {
+    if (currentTime - buzzerLastChange >= BUZZER_ON_TIME) {
+      // Время истекло - выключаем
+      digitalWrite(ALARM_PIN_33, LOW);
+      buzzerCurrentState = false;
+      buzzerLastChange = currentTime;
+      Serial.println("Buzzer: OFF (pause 1 sec)");
+    }
+  }
+  // Зуммер сейчас выключен
+  else {
+    if (currentTime - buzzerLastChange >= BUZZER_OFF_TIME) {
+      // Пауза истекла - включаем
+      digitalWrite(ALARM_PIN_33, HIGH);
+      buzzerCurrentState = true;
+      buzzerLastChange = currentTime;
+      Serial.println("Buzzer: ON (2 sec)");
+    }
+  }
+}
+
+// =====================================================
+// ЛОГИКА КОНТРОЛЯ ТЕМПЕРАТУРЫ (ИЗМЕНЕННАЯ ВЕРСИЯ)
 // =====================================================
 void checkProcessLimits() {
-  if (!processStarted || sensorErrorActive) return;
+  if (!processStarted || sensorErrorActive) {
+    stopBuzzerCycle();  // ДОБАВЛЕНО: останавливаем зуммер при ошибке или остановке процесса
+    return;
+  }
   
   float threshold = myTmpMax + tempDev;
   
@@ -67,11 +128,10 @@ void checkProcessLimits() {
                      "°C\n🚰 Клапан ЗАКРЫТ", chatID);
     }
     
-    // Включить зуммер если разрешен (D33 → HIGH)
-    if (alarmEnabled && digitalRead(ALARM_PIN_33) == LOW) {
-      digitalWrite(ALARM_PIN_33, HIGH);
-      Serial.println("PROCESS: Alarm activated (HIGH on D33)");
-      sendBotMessage("🔔 Зуммер ВКЛЮЧЕН", chatID);
+    // ИЗМЕНЕНО: Запускаем циклический зуммер если разрешен
+    if (alarmEnabled && !buzzerCycleActive) {
+      startBuzzerCycle();
+      sendBotMessage("🔔 Зуммер ВКЛЮЧЕН (циклический режим)", chatID);
     }
   }
   
@@ -86,10 +146,10 @@ void checkProcessLimits() {
                      "°C\n🚰 Клапан ОТКРЫТ", chatID);
     }
     
-    // Выключить зуммер (D33 → LOW)
-    if (digitalRead(ALARM_PIN_33) == HIGH) {
-      digitalWrite(ALARM_PIN_33, LOW);
-      Serial.println("PROCESS: Alarm deactivated (LOW on D33)");
+    // ИЗМЕНЕНО: Останавливаем циклический зуммер
+    if (buzzerCycleActive) {
+      stopBuzzerCycle();
+      sendBotMessage("🔕 Зуммер ВЫКЛЮЧЕН", chatID);
     }
   }
 }
