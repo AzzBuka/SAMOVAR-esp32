@@ -86,4 +86,10 @@ extern volatile bool timerFinished;
 extern bool showTimerZero;
 extern uint32_t timerZeroShowTime;
 
+extern bool buzzerCycleActive;
+extern bool buzzerCurrentState;
+extern uint32_t buzzerLastChange;
+extern const uint32_t BUZZER_ON_TIME;
+extern const uint32_t BUZZER_OFF_TIME;
+
 #endif // CONFIG_H
