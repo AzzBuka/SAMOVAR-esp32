@@ -66,6 +66,11 @@ volatile bool timerActive = false;
 volatile bool timerFinished = false;
 bool showTimerZero = false;
 uint32_t timerZeroShowTime = 0;
+bool buzzerCycleActive = false;
+bool buzzerCurrentState = false;
+uint32_t buzzerLastChange = 0;
+const uint32_t BUZZER_ON_TIME = 2000;
+const uint32_t BUZZER_OFF_TIME = 1000;
 
 // =====================================================
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ - Система
@@ -183,7 +188,9 @@ void loop() {
     displayTimer = millis();
     updateDisplay();
   }
-  
+
+  // --Обновление циклического зуммера
+  updateBuzzerCycle();
   // --- ОБРАБОТКА ЗАВЕРШЕНИЯ ТАЙМЕРА ---
   handleTimerFinished();
   
