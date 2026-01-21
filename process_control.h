@@ -19,4 +19,9 @@ void handleTimerFinished();
 // Прерывание таймера (вызывается каждую секунду)
 void IRAM_ATTR onTimer();
 
+// Управление циклическим зуммером
+void startBuzzerCycle();
+void stopBuzzerCycle();
+void updateBuzzerCycle();
+
 #endif // PROCESS_CONTROL_H
