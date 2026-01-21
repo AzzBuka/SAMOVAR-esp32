@@ -208,28 +208,35 @@ void handleBotMessages(FB_msg& msg) {
     bot->sendMessage("🔔 Зуммер РАЗРЕШЕН (Alarm Enabled: ON)\n⚠️ Зуммер будет включаться автоматически при превышении температуры", msg.chatID);
     Serial.println("Alarm globally enabled");
   }
-  else if (msg.text == "/alarm_off") {
-    alarmEnabled = false;
-    digitalWrite(ALARM_PIN_33, LOW);
-    saveUserSettings();
-    bot->sendMessage("🔕 Зуммер ЗАПРЕЩЕН (Alarm Enabled: OFF)\n📍 D33 установлен в LOW", msg.chatID);
-    Serial.println("Alarm globally disabled");
-  }
-  
-  // ТРИГГЕР ЗУММЕРА
-  else if (msg.text == "/zummer") {
-    if (alarmEnabled) {
+else if (msg.text == "/alarm_off") {
+  alarmEnabled = false;
+  stopBuzzerCycle();  // ДОБАВЛЕНО: останавливаем циклический режим
+  digitalWrite(ALARM_PIN_33, LOW);
+  saveUserSettings();
+  bot->sendMessage("🔕 Зуммер ЗАПРЕЩЕН (Alarm Enabled: OFF)\n📍 D33 установлен в LOW", msg.chatID);
+  Serial.println("Alarm globally disabled");
+}
+
+// ИЗМЕНЕНО: команда /zummer (теперь работает только в ручном режиме)
+else if (msg.text == "/zummer") {
+  if (alarmEnabled) {
+    if (buzzerCycleActive) {
+      // Если идет циклический режим - останавливаем его
+      stopBuzzerCycle();
+      bot->sendMessage("🔕 Циклический режим зуммера ОСТАНОВЛЕН\n📍 Используйте /zummer снова для ручного переключения", msg.chatID);
+    } else {
+      // Ручное переключение
       bool currentState = digitalRead(ALARM_PIN_33);
       digitalWrite(ALARM_PIN_33, !currentState);
-      
       String newState = !currentState ? "HIGH (ВКЛ)" : "LOW (ВЫКЛ)";
-      bot->sendMessage("🔔 Зуммер переключен\n📍 D33: " + newState, msg.chatID);
-      Serial.println("Zummer toggled to: " + String(!currentState ? "HIGH" : "LOW"));
-    } else {
-      bot->sendMessage("⚠️ ОШИБКА: Зуммер запрещен!\nСначала выполните /alarm_on для разрешения использования зуммера.", msg.chatID);
-      Serial.println("Zummer toggle DENIED: Alarm not enabled");
+      bot->sendMessage("🔔 Зуммер переключен (ручной режим)\n📍 D33: " + newState, msg.chatID);
+      Serial.println("Zummer manually toggled to: " + String(!currentState ? "HIGH" : "LOW"));
     }
+  } else {
+    bot->sendMessage("⚠️ ОШИБКА: Зуммер запрещен!\nСначала выполните /alarm_on для разрешения использования зуммера.", msg.chatID);
+    Serial.println("Zummer toggle DENIED: Alarm not enabled");
   }
+}
   
   // УПРАВЛЕНИЕ КЛАПАНОМ
   else if (msg.text == "/valve_on") {
