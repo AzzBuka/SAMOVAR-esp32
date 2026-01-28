@@ -25,6 +25,7 @@
 #include "time.h"
 #include <ESPping.h> 
 #include <GyverSegment.h>
+#include <stdint.h>
 
 // =====================================================
 // ПОДКЛЮЧЕНИЕ МОДУЛЕЙ
@@ -36,6 +37,15 @@
 #include "temperature.h"
 #include "process_control.h"
 #include "web_portal.h"
+
+// =====================================================
+// ОПРЕДЕЛЕНИЯ КОНСТАНТ ИЗ config.h
+// =====================================================
+const char* NTP_SERVER = "pool.ntp.org";
+const long GMT_OFFSET_SEC = 3 * 3600;
+const int DAYLIGHT_OFFSET_SEC = 0;
+const char* AP_PASSWORD = "12345678";
+const uint8_t DISPLAY_BRIGHTNESS = 5;
 
 // =====================================================
 // ГЛОБАЛЬНЫЕ ОБЪЕКТЫ
@@ -66,11 +76,10 @@ volatile bool timerActive = false;
 volatile bool timerFinished = false;
 bool showTimerZero = false;
 uint32_t timerZeroShowTime = 0;
+// Циклический зуммер (ПРАВИЛЬНАЯ ВЕРСИЯ)
 bool buzzerCycleActive = false;
 bool buzzerCurrentState = false;
 uint32_t buzzerLastChange = 0;
-const uint32_t BUZZER_ON_TIME = 2000;
-const uint32_t BUZZER_OFF_TIME = 1000;
 
 // =====================================================
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ - Система
@@ -104,7 +113,7 @@ bool resetButtonPressed = false;
 void setup() {
   Serial.begin(115200);
   Serial.println("\n\n=== SAMOVAR V2 STARTING ===");
-  Serial.println("Firmware version: " + String(FIRMWARE_VERSION));
+  //Serial.println("Firmware version: " + String(FIRMWARE_VERSION));
   
   // --- ИНИЦИАЛИЗАЦИЯ GPIO ---
   pinMode(ALARM_PIN_33, OUTPUT);
