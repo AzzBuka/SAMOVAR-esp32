@@ -1,23 +1,24 @@
-const uint32_t BUZZER_ON_TIME = 2000;
-const uint32_t BUZZER_OFF_TIME = 1000;
-
 #include "process_control.h"
 #include "config.h"
 #include "telegram_bot.h"
 
 extern hw_timer_t * timer;
 
-bool buzzerCycleActive = false;
-bool buzzerCurrentState = false;
-uint32_t buzzerLastChange = 0;
+// УБРАНО: переменные перенесены в SAMOVAR_V2.ino
+// Константы остаются здесь как локальные
+static const uint32_t BUZZER_ON_TIME = 2000;    // 2 секунды ВКЛ
+static const uint32_t BUZZER_OFF_TIME = 1000;   // 1 секунда ВЫКЛ
 
+// =====================================================
+// ПРЕРЫВАНИЕ ТАЙМЕРА
+// =====================================================
 void IRAM_ATTR onTimer() {
   if (timerActive && timerSeconds > 0) {
     timerSeconds--;
     if (timerSeconds == 0) {
       timerActive = false;
       timerFinished = true;
-      showTimerZero = true; // Показать 0 на дисплее
+      showTimerZero = true;
     }
   }
 }
@@ -26,9 +27,9 @@ void IRAM_ATTR onTimer() {
 // ИНИЦИАЛИЗАЦИЯ АППАРАТНОГО ТАЙМЕРА
 // =====================================================
 void initHardwareTimer() {
-  timer = timerBegin(1000000);              // 1 МГц (1 тик = 1 мкс)
-  timerAttachInterrupt(timer, &onTimer);    // Привязка функции
-  timerAlarm(timer, 1000000, true, 0);      // 1 000 000 тиков = 1 сек, авто-перезапуск
+  timer = timerBegin(1000000);
+  timerAttachInterrupt(timer, &onTimer);
+  timerAlarm(timer, 1000000, true, 0);
   timerStart(timer);
   Serial.println("Hardware timer initialized");
 }
@@ -39,15 +40,13 @@ void initHardwareTimer() {
 void handleTimerFinished() {
   if (timerFinished) {
     timerFinished = false;
-    timerZeroShowTime = millis(); // Запоминаем время показа 0
+    timerZeroShowTime = millis();
     Serial.println("TIMER FINISHED! timerSeconds = " + String(timerSeconds));
     sendBotMessage("🔔 ТАЙМЕР: Время истекло!", chatID);
   }
   
-  // Проверяем, прошла ли секунда после показа 0
   if (showTimerZero && millis() - timerZeroShowTime >= TIMER_ZERO_DISPLAY_DURATION) {
     showTimerZero = false;
-    lastTimerSeconds = -1; // Сбрасываем, чтобы обновить дисплей на время
   }
 }
 
@@ -76,27 +75,22 @@ void stopBuzzerCycle() {
 }
 
 // =====================================================
-// ОБНОВЛЕНИЕ ЦИКЛИЧЕСКОГО ЗУММЕРА (вызывать в loop)
+// ОБНОВЛЕНИЕ ЦИКЛИЧЕСКОГО ЗУММЕРА
 // =====================================================
 void updateBuzzerCycle() {
   if (!buzzerCycleActive) return;
   
   uint32_t currentTime = millis();
   
-  // Зуммер сейчас включен
   if (buzzerCurrentState) {
     if (currentTime - buzzerLastChange >= BUZZER_ON_TIME) {
-      // Время истекло - выключаем
       digitalWrite(ALARM_PIN_33, LOW);
       buzzerCurrentState = false;
       buzzerLastChange = currentTime;
       Serial.println("Buzzer: OFF (pause 1 sec)");
     }
-  }
-  // Зуммер сейчас выключен
-  else {
+  } else {
     if (currentTime - buzzerLastChange >= BUZZER_OFF_TIME) {
-      // Пауза истекла - включаем
       digitalWrite(ALARM_PIN_33, HIGH);
       buzzerCurrentState = true;
       buzzerLastChange = currentTime;
@@ -106,20 +100,17 @@ void updateBuzzerCycle() {
 }
 
 // =====================================================
-// ЛОГИКА КОНТРОЛЯ ТЕМПЕРАТУРЫ (ИЗМЕНЕННАЯ ВЕРСИЯ)
+// ЛОГИКА КОНТРОЛЯ ТЕМПЕРАТУРЫ
 // =====================================================
 void checkProcessLimits() {
   if (!processStarted || sensorErrorActive) {
-    stopBuzzerCycle();  // ДОБАВЛЕНО: останавливаем зуммер при ошибке или остановке процесса
+    stopBuzzerCycle();
     return;
   }
   
   float threshold = myTmpMax + tempDev;
   
-  // ===== ПРОВЕРКА ПРЕВЫШЕНИЯ ТЕМПЕРАТУРЫ =====
   if (myTmpCur >= threshold) {
-    
-    // Закрыть клапан (D26 → HIGH)
     if (digitalRead(VALVE_PIN_26) == LOW) {
       digitalWrite(VALVE_PIN_26, HIGH);
       Serial.println("PROCESS: Temperature exceeded! Valve CLOSED (HIGH on D26)");
@@ -128,17 +119,12 @@ void checkProcessLimits() {
                      "°C\n🚰 Клапан ЗАКРЫТ", chatID);
     }
     
-    // ИЗМЕНЕНО: Запускаем циклический зуммер если разрешен
     if (alarmEnabled && !buzzerCycleActive) {
       startBuzzerCycle();
       sendBotMessage("🔔 Зуммер ВКЛЮЧЕН (циклический режим)", chatID);
     }
   }
-  
-  // ===== ПРОВЕРКА НОРМАЛИЗАЦИИ ТЕМПЕРАТУРЫ =====
   else if (myTmpCur <= myTmpMax) {
-    
-    // Открыть клапан (D26 → LOW)
     if (digitalRead(VALVE_PIN_26) == HIGH) {
       digitalWrite(VALVE_PIN_26, LOW);
       Serial.println("PROCESS: Temperature normalized! Valve OPEN (LOW on D26)");
@@ -146,7 +132,6 @@ void checkProcessLimits() {
                      "°C\n🚰 Клапан ОТКРЫТ", chatID);
     }
     
-    // ИЗМЕНЕНО: Останавливаем циклический зуммер
     if (buzzerCycleActive) {
       stopBuzzerCycle();
       sendBotMessage("🔕 Зуммер ВЫКЛЮЧЕН", chatID);
